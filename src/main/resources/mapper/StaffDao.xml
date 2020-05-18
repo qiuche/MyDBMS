@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.schoolwork.desktopapp.dao.StaffDao">
+    <select id="getAllInfo" resultType="com.schoolwork.desktopapp.entity.Staff">
+        select * from staff
+    </select>
+    <select id="getInfoById" resultType="com.schoolwork.desktopapp.entity.Staff">
+        select * from staff where staff_id=#{staff_id}
+    </select>
+    <select id="getInfoByName" resultType="com.schoolwork.desktopapp.entity.Staff">
+        select * from staff where staff_name like "%"#{staff_name}"%"
+    </select>
+    <insert id="addStaff">
+        insert into staff(staff_name,staff_sex,staff_birthday,identity_number,native_place,address,telephone_number,staff_account,staff_password) values (#{staff_name},#{staff_sex},#{staff_birthday},#{identity_number},#{native_place},#{address},#{telephone_number},#{staff_account},#{staff_password})
+    </insert>
+    <delete id="delStaff">
+        delete from staff where staff_id = #{staff_id}
+    </delete>
+    <update id="updateStaff">
+        update staff set staff_name = #{staff_name},staff_sex = #{staff_sex},staff_birthday = #{staff_birthday},identity_number = #{identity_number},
+        native_place = #{native_place},address = #{address},telephone_number = #{telephone_number},staff_account = #{staff_account},staff_password = #{staff_password}
+        where staff_id = #{staff_id}
+    </update>
+</mapper>

@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+#spring:
+#  mvc:
+#    throw-exception-if-no-handler-found: true
+#    view:
+#      prefix: /WEB-INF/views/
+#      suffix: .jsp
+#
+#  datasource:
+#    driverClassName: com.mysql.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/desktopapp?useUnicode=true&characterEncoding=utf8&useSSL=true
+#    username: root
+#    password: 159369
+#
+#mybatis:
+#  type-aliases-package: com.schoolwork.desktopapp # mybatis entity scan packages
+#  mapper-locations: classpath*:/mapper/*Dao.xml # Mapper.xml location
+#
+#
+#
+#pagehelper:
+#  helper-dialect: mysql #指定数据库
+#  reasonable: true #是否启动分页合理化，如：pagenum < 1 ,会设置为0
+#  support-methods-arguments: true
+#  pageSizeZero: false #pageSize=0
+#
+#
+#logging:
+#  level:
+#    org:
+#      springframework: WARN
+#    com:
+#      spring:
+#        ibatis:
+#          UserMapper: DEBUG
+#  file: logs/spring-boot-logging.log
