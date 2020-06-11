@@ -1,8 +1,13 @@
 server:
   port: 8080
 
+spring:
+  #切面启用
+  aop:
+    proxy-target-class: true
+    auto: true
 #spring:
-#  mvc:
+#  mvc:x`
 #    throw-exception-if-no-handler-found: true
 #    view:
 #      prefix: /WEB-INF/views/
