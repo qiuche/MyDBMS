@@ -4,8 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Formual {
-    private List<OpValue> arrRes;
-    private String[] pointStr;
+    private List<OpValue> arrRes;     //保存除了and 和 or 其他的内容
+    private String[] pointStr;       //保存逆波兰式
 
     public List<OpValue> getArrRes() {
         return arrRes;

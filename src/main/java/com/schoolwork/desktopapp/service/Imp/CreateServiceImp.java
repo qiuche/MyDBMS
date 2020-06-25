@@ -2,7 +2,7 @@ package com.schoolwork.desktopapp.service.Imp;
 
 import com.alibaba.fastjson.JSONObject;
 import com.schoolwork.desktopapp.entity.SQLConstant;
-import com.schoolwork.desktopapp.entity.tableSet;
+import com.schoolwork.desktopapp.bean.tableSet;
 import com.schoolwork.desktopapp.service.CreateService;
 import com.schoolwork.desktopapp.utils.Feedback;
 import org.apache.commons.lang.StringUtils;
@@ -61,7 +61,13 @@ public class CreateServiceImp implements CreateService {
                     fos.write(newline.getBytes());
                     for (int i = 0; i < tableSets.size(); i++) {
                         str += tableSets.get(i).getKey() + seq;
-                        str1 += tableSets.get(i).getArrLimit() + seq;
+                        if("".equals(tableSets.get(i).getArrLimit())) {
+                            str1 += "null" + seq;
+                        }
+                        else
+                        {
+                            str1 += tableSets.get(i).getArrLimit() + seq;
+                        }
                         str2 += tableSets.get(i).getLimitStyle() + tableSets.get(i).getLimitNum() + seq;
                     }
                     str += newline;
@@ -83,6 +89,7 @@ public class CreateServiceImp implements CreateService {
         }
     }
 
+    //创建表的人拥有表的全部权限
     private void InsertGrant(int id) throws IOException {
         File file = new File(SQLConstant.getGrantpath());
         FileOutputStream fos = new FileOutputStream(file, true);
@@ -102,8 +109,10 @@ public class CreateServiceImp implements CreateService {
         fos.flush();
         fos.close();
         HttpServletRequest reques = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        List grantlist = (List) reques.getSession().getAttribute("Power");
-        grantlist.add(id);
+        List<String> grantlist = (List) reques.getSession().getAttribute("Power");
+        grantlist.add(String.valueOf(id));
+        System.out.println("新的权限表");
+        System.out.println(grantlist);
         reques.getSession().setAttribute("Power",grantlist);
     }
 }

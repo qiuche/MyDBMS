@@ -26,19 +26,19 @@ import java.util.*;
 public class DeleteServiceImp implements DeleteService {
     @Override
     @Transactional
-    public JSONObject delete(String deleteTable,String table, String formual) throws IOException {
+    public JSONObject delete(String deleteTable, String table, String formual) throws IOException {
         boolean tableExist = true;
 
         StringBuilder builder = new StringBuilder();
         List<Table> tables = JSON.parseArray(table, Table.class);
         String sep = SQLConstant.getSeparate();
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String path =request.getSession().getAttribute("nowPath").toString();
-        List grantlist = (List) request.getSession().getAttribute("Power");
+        String path = request.getSession().getAttribute("nowPath").toString();
+        List<String> grantlist = (List) request.getSession().getAttribute("Power");
         List<OutColumn> outColumnList = new ArrayList<>();
         for (Table item : tables) {
 //                File file = new File(path+item.getTablename()+".txt");
-            File file = new File(path +"\\"+ item.getTablename() + ".txt");
+            File file = new File(path + "\\" + item.getTablename() + ".txt");
 
             if (!file.exists()) {
                 builder.append(item.getTablename() + ",");
@@ -70,7 +70,7 @@ public class DeleteServiceImp implements DeleteService {
                 List<String> type = Arrays.asList(bufferedReader.readLine().split(sep));
                 List<String> constraint = Arrays.asList(bufferedReader.readLine().split(sep));
                 int i = 0;
-                for(Column column:item.getColumnList()){
+                for (Column column : item.getColumnList()) {
                     column.setType(type.get(i));
                     column.setConstraint(constraint.get(i));
                     i++;
@@ -78,11 +78,11 @@ public class DeleteServiceImp implements DeleteService {
                 //读取列数据
 
                 String s = "";
-                i=0;
+                i = 0;
                 List<List<String>> valueList = new ArrayList<>();
                 List<Index> indexList = new ArrayList<>();
                 while ((s = bufferedReader.readLine()) != null) {
-                    if(s.equals("")) break;
+                    if (s.equals("")) break;
                     List<String> rows = new ArrayList<>(Arrays.asList(s.split(sep)));
                     for (int num = rows.size(); num < item.getColumnList().size(); num++) {
                         rows.add("");
@@ -94,7 +94,7 @@ public class DeleteServiceImp implements DeleteService {
                     valueList.add(rows);
                 }
                 item.setIndex(indexList);
-                TableIndex tableIndex = new TableIndex(item.getTablename(),item.getAlias(), 0, item.getColumnList().size());
+                TableIndex tableIndex = new TableIndex(item.getTablename(), item.getAlias(), 0, item.getColumnList().size());
                 List<TableIndex> tableIndexList = new ArrayList<>();
                 tableIndexList.add(tableIndex);
                 item.setTableIndex(tableIndexList);
@@ -103,81 +103,34 @@ public class DeleteServiceImp implements DeleteService {
                 System.out.println(item);
             }
         }
-        if(!tableExist)
-            return Feedback.info(builder+"表不存在","500");
+        if (!tableExist)
+            return Feedback.info(builder + "表不存在", "500");
         Table startTable;
-        if(tables.size()==1){
-            startTable=tables.get(0);
-        }
-        else {
-            startTable= SelectHelper.getCartesian(tables);
+        if (tables.size() == 1) {
+            startTable = tables.get(0);
+        } else {
+            startTable = SelectHelper.getCartesian(tables);
         }
         Stack<Table> stack = new Stack<>();
 
-        if(StringUtil.isNotEmpty(formual)) {
-            Formual formuals = JSONObject.parseObject(formual, Formual.class);
-            //查询到uid
-            for (String uid : formuals.getPointStr()) {
-                if (SelectHelper.isOperation(uid)) {
-                    Table leftTable = stack.pop();
-                    Table rightTable = stack.pop();
-                    Table midTable=SelectHelper.getTableCount(leftTable,rightTable,uid);
-                    stack.push(midTable);
-                }
-                else {
-                    Table countTable=new Table();
-                    for(OpValue opValue:formuals.getArrRes()){
-                        if(opValue.getUid().equals(uid)){
-                            if(SelectHelper.isKey(opValue.getKey())){
-                                if(SelectHelper.isKey(opValue.getKey())){
-                                    int leftIndex=SelectHelper.getColumnIndex(opValue.getKey(),startTable);
-                                    if(SelectHelper.isKey(opValue.getValue())){
-                                        int rightIndex=SelectHelper.getColumnIndex(opValue.getValue(),startTable);
-                                        countTable=SelectHelper.getTableResult(leftIndex,rightIndex,startTable,opValue.getOperator());
-                                        stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                    }
-                                    else {
-                                        String rightValue=SelectHelper.getSubString(opValue.getValue());
-                                        countTable=SelectHelper.getTableResult(leftIndex,rightValue,startTable,opValue.getOperator());
-                                        stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                    }
-                                }
-                            }
-                            else {
-                                String rightValue=SelectHelper.getSubString(opValue.getValue());
-                                if(SelectHelper.isKey(opValue.getValue())){
-                                    int leftIndex=SelectHelper.getColumnIndex(opValue.getValue(),startTable);
-                                    countTable=SelectHelper.getTableResult(leftIndex,rightValue,startTable,opValue.getOperator());
-                                    stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                }
-                                else {
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        if(!StringUtil.isEmpty(formual)) {
+            Object object=SelectHelper.calculateTable(formual,startTable);
+            if(object instanceof JSONObject) return (JSONObject) object;
+            else if(object instanceof Stack) stack= (Stack<Table>) object;
         }
-        List<String> needTableList=JSON.parseArray(deleteTable,String.class);
+
+        List<String> needTableList = JSON.parseArray(deleteTable, String.class);
         JSONObject jsonObject = new JSONObject();
-        List<ChangeTable> deleteTableList=new ArrayList<>();
-        if(!stack.empty()){
-            deleteTableList=DeleteHelper.getNeedDelete(needTableList,stack.pop());
+        List<ChangeTable> deleteTableList = new ArrayList<>();
+        if (!stack.empty()) {
+            deleteTableList = DeleteHelper.getNeedDelete(needTableList, stack.pop());
+        } else {
+            deleteTableList = DeleteHelper.getNeedDelete(needTableList, startTable);
         }
-        else{
-            deleteTableList=DeleteHelper.getNeedDelete(needTableList,startTable);
+        HashMap<String, String> hashMap = DeleteHelper.deleteValue(deleteTableList);
+        if (hashMap.containsKey("Error")) {
+            return Feedback.info(hashMap.get("Error"), "501");
         }
-        ;
-        jsonObject.put("deleteResult", DeleteHelper.deleteValue(deleteTableList));
-        return Feedback.jsonObject(jsonObject,"500");
+        return Feedback.info(hashMap.get("Success"), "200");
     }
 }

@@ -1,8 +1,8 @@
 package com.schoolwork.desktopapp.bean;
 
 public class DoubleIndex {
-    private String leftIndex;
-    private String rightIndex;
+    private String leftIndex;    //左表的的位置
+    private String rightIndex;   //右表的位置
 
     public String getLeftIndex() {
         return leftIndex;

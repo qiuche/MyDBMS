@@ -3,8 +3,8 @@ package com.schoolwork.desktopapp.bean;
 import java.util.List;
 
 public class OutPutTable {
-    private List<String> columns;
-    private List<List<String>> values;
+    private List<String> columns;         //输出的列的名称
+    private List<List<String>> values;    //输出的每一行的值
 
     public List<String> getColumns() {
         return columns;

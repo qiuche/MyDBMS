@@ -1,10 +1,10 @@
 package com.schoolwork.desktopapp.bean;
 
 public class OpValue {
-    private String key;
-    private String value;
-    private String operator;
-    private String uid;
+    private String key;    //键
+    private String value;   //值
+    private String operator;  //操作符
+    private String uid;     //编号
 
     public String getKey() {
         return key;

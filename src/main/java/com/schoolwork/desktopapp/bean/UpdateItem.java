@@ -1,12 +1,12 @@
 package com.schoolwork.desktopapp.bean;
 
 public class UpdateItem {
-    private String key;
-    private int index;
-    private String value;
-    private String type;
-    private String constraint;
-    private String tableName;
+    private String key;    //键
+    private int index;     //在原来的中的第几个
+    private String value;   //值
+    private String type;    //类型
+    private String constraint;  //约束
+    private String tableName;    //来自的表
     public String getKey() {
         return key;
     }

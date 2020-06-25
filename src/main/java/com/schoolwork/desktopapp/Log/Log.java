@@ -16,7 +16,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
+/*
+*
+* 将日志写入log.xls
+* */
 public class Log {
     public static void CteateLog() throws IOException, WriteException {
         String url = SQLConstant.getPath() + "//" + "Log.xls";

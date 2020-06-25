@@ -1,7 +1,7 @@
 package com.schoolwork.desktopapp.service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.schoolwork.desktopapp.entity.tableSet;
+import com.schoolwork.desktopapp.bean.tableSet;
 
 import javax.servlet.http.HttpSession;
 import java.io.IOException;

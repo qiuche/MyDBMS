@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Table {
-    private String tablename;
-    private String alias;
-    private List<Index> index=new ArrayList<>();
-    private List<TableIndex> tableIndex;
-    private List<Column> columnList;
-    private List<List<String>> value;
+    private String tablename;    //表名
+    private String alias;        //表的别名
+    private List<Index> index=new ArrayList<>();   //表数据索引
+    private List<TableIndex> tableIndex;           //表内分表的索引
+    private List<Column> columnList;      //属性及其类别约束
+    private List<List<String>> value;     //每一行的值
 
     public List<List<String>> getValue() {
         return value;

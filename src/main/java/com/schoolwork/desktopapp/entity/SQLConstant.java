@@ -1,5 +1,7 @@
 package com.schoolwork.desktopapp.entity;
 
+import com.schoolwork.desktopapp.bean.TableValue;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,23 +9,25 @@ import java.util.List;
 
 /**
  * @ Description   :  与数据库相关的常量
- * @ Author        :  马驰
- * @ CreateDate    :  2019/12/27 10:27
+ * 数据库基本的配置数据
  */
 public class SQLConstant {
     //数据库的根路径
     private static final String path = "C:\\DBMS";
-
+    //标识表id文件
     private static final String sumpath = path + "\\" + "Sum.txt";
-    //数据库的当前路径
+    //权限文件
     private static final String grantpath = path + "\\" + "Grant.txt";
-
+    //数据库的当前路径
     private static String nowPath = path;
-    
     //自定义的分隔符
     private static final String separate = "~";
 
     public static String getGrantpath() {
+        File file = new File(grantpath);
+        if (!(file.exists())) {
+            file.mkdirs();
+        }
         return grantpath;
     }
 
@@ -60,6 +64,7 @@ public class SQLConstant {
         return separate;
     }
 
+    //写入表id
     public static void setSum(int number) throws Exception {
         File file = new File(sumpath);
         if (file.exists()) {
@@ -75,6 +80,7 @@ public class SQLConstant {
         }
     }
 
+    //获取表id
     public static int getSum() throws Exception {
         File file = new File(sumpath);
         try {
@@ -100,6 +106,7 @@ public class SQLConstant {
         return 0;
     }
 
+    //获取文件中已经存在的数据
     public static List<TableValue> getExitValue(File file, String[] names) throws IOException {
         FileReader fileReader = new FileReader(file);
         //读文件
@@ -114,8 +121,7 @@ public class SQLConstant {
             int index = 0;
             String[] row = teststr.split(SQLConstant.getSeparate());
             List<String> rows = new ArrayList<>(Arrays.asList(teststr.split(SQLConstant.getSeparate())));
-            for(int i=rows.size();i<names.length;i++)
-            {
+            for (int i = rows.size(); i < names.length; i++) {
                 rows.add("");
             }
             if (rows.size() == names.length) {
@@ -130,6 +136,7 @@ public class SQLConstant {
         return TableValuelist;
     }
 
+    //读取某一行的数据
     public static String readAppointedLineNumber(File sourceFile, int lineNumber)
             throws IOException {
         FileReader in = new FileReader(sourceFile);
@@ -154,6 +161,7 @@ public class SQLConstant {
         return t;
     }
 
+    //获取总行数
     public static int getTotalLines(File file) throws IOException {
         FileReader in = new FileReader(file);
         LineNumberReader reader = new LineNumberReader(in);

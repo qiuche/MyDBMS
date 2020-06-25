@@ -1,11 +1,11 @@
 package com.schoolwork.desktopapp.bean;
 
 public class Column {
-    private String column;
-    private String tableColumn;
-    private String aliasColumn;
-    private String type;
-    private String constraint;
+    private String column;     //属性
+    private String tableColumn;  //tablename.column
+    private String aliasColumn;    //alias.column
+    private String type;     //类型
+    private String constraint;   //约束
     public Column(String column, String tableColumn, String aliasColumn) {
         this.column = column;
         this.tableColumn = tableColumn;

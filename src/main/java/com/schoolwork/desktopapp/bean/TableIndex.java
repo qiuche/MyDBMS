@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TableIndex {
-    private String tableName;
-    private String alias;
-    private int start;
-    private int end;
-    private List<List<String>> tablevalue;
-    private List<Integer> primarykey=new ArrayList<>();
+    private String tableName;         //表名
+    private String alias;              //表的别名
+    private int start;                 //属性在大表的开始位置，没用到
+    private int end;                   //属性在大表的结束位置，没用到
+    private List<List<String>> tablevalue; //内容   ，没用到
+    private List<Integer> primarykey=new ArrayList<>();//该表的主键在属性的位置
 
     @Override
     public String toString() {

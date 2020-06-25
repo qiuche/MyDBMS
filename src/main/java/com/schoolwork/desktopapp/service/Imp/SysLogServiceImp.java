@@ -2,7 +2,7 @@ package com.schoolwork.desktopapp.service.Imp;
 
 
 import com.schoolwork.desktopapp.Log.Log;
-import com.schoolwork.desktopapp.entity.SysLogBO;
+import com.schoolwork.desktopapp.bean.SysLogBO;
 import com.schoolwork.desktopapp.service.SysLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

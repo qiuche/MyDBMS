@@ -28,19 +28,20 @@ public class SelectServiceImp implements SelectService {
     @Transactional
     public JSONObject select(String resultColumns, String table, String formual) throws IOException {
         boolean tableExist = true;
-        SelectHelper selectHelper = new SelectHelper();
+        //用于保存不存在的table
         StringBuilder builder = new StringBuilder();
+        //利用FastJson解析，获取得到的表
         List<Table> tables = JSON.parseArray(table, Table.class);
+        //默认分隔符~
         String sep = SQLConstant.getSeparate();
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        String path = request.getSession().getAttribute("nowPath").toString();
-        List grantlist = (List) request.getSession().getAttribute("Power");
+        String path = request.getSession().getAttribute("nowPath").toString(); //获取路径
+        List<String> grantlist = (List) request.getSession().getAttribute("Power");  //获取权限
         List<OutColumn> outColumnList = new ArrayList<>();
         for (Table item : tables) {
             File file = new File(path +"\\"+ item.getTablename() + ".txt");
-
-//            File file = new File("C:\\Users\\Window10\\Desktop\\"+item.getTablename()+".txt");
             if (!file.exists()) {
+                //保存不存在的表名
                 builder.append(item.getTablename() + ",");
                 tableExist = false;
             }
@@ -57,7 +58,6 @@ public class SelectServiceImp implements SelectService {
                 //读取属性
                 String strings = bufferedReader.readLine();
                 String[] columns = strings.split(sep);
-//                List<TableValue> tableValueList=new ArrayList<>();
                 List<Column> columnList = new ArrayList<>();
                 for (String column : columns) {
                     Column column1 = new Column(column, item.getTablename() + "." + column);
@@ -65,7 +65,6 @@ public class SelectServiceImp implements SelectService {
                         column1.setAliasColumn(item.getAlias() + "." + column);
                     }
                     columnList.add(column1);
-
                 }
                 item.setColumnList(columnList);
 
@@ -105,11 +104,20 @@ public class SelectServiceImp implements SelectService {
                 int index = 0;
                 for (Table table1 : tables) {
                     for (Column column : table1.getColumnList()) {
-                        if (key.equals(column.getColumn()) ||
-                                key.equals(column.getTableColumn()) ||
-                                key.equals(column.getAliasColumn())) {
-                            index++;
+                        if(column.getAliasColumn()==null){
+                            if (key.equals(column.getColumn()) ||
+                                    key.equals(column.getTableColumn())) {
+                                index++;
+                            }
                         }
+                        else {
+                            if (key.equals(column.getColumn()) ||
+                                    key.equals(column.getTableColumn()) ||
+                                    key.equals(column.getAliasColumn())) {
+                                index++;
+                            }
+                        }
+
                     }
                 }
                 columnIndex.put(key, index);
@@ -125,8 +133,6 @@ public class SelectServiceImp implements SelectService {
                 return Feedback.info(errorColumn.toString(), "500");
             }
         }
-
-
         if (!tableExist)
             return Feedback.info(builder + "表不存在", "500");
 
@@ -138,57 +144,12 @@ public class SelectServiceImp implements SelectService {
             startTable= SelectHelper.getCartesian(tables);
         }
         Stack<Table> stack = new Stack<>();
-        if (StringUtil.isNotEmpty(formual)) {
-            Formual formuals = JSONObject.parseObject(formual, Formual.class);
-            //查询到uid
-            for (String uid : formuals.getPointStr()) {
-                if (SelectHelper.isOperation(uid)) {
-                    Table leftTable = stack.pop();
-                    Table rightTable = stack.pop();
-                    System.out.println(leftTable);
-                    System.out.println(rightTable);
-                    Table midTable = SelectHelper.getTableCount(leftTable, rightTable, uid);
-                    stack.push(midTable);
-                } else {
-                    Table countTable = new Table();
-                    for (OpValue opValue : formuals.getArrRes()) {
-                        if (opValue.getUid().equals(uid)) {
-                            if (SelectHelper.isKey(opValue.getKey())) {
-                                if (SelectHelper.isKey(opValue.getKey())) {
-                                    int leftIndex = SelectHelper.getColumnIndex(opValue.getKey(), startTable);
-                                    if (SelectHelper.isKey(opValue.getValue())) {
-                                        int rightIndex = SelectHelper.getColumnIndex(opValue.getValue(), startTable);
-                                        countTable = SelectHelper.getTableResult(leftIndex, rightIndex, startTable, opValue.getOperator());
-                                        stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                    } else {
-                                        String rightValue = SelectHelper.getSubString(opValue.getValue());
-                                        countTable = SelectHelper.getTableResult(leftIndex, rightValue, startTable, opValue.getOperator());
-                                        stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                    }
-                                }
-                            } else {
-                                String rightValue = SelectHelper.getSubString(opValue.getValue());
-                                if (SelectHelper.isKey(opValue.getValue())) {
-                                    int leftIndex = SelectHelper.getColumnIndex(opValue.getValue(), startTable);
-                                    countTable = SelectHelper.getTableResult(leftIndex, rightValue, startTable, opValue.getOperator());
-                                    stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                } else {
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        if(!StringUtil.isEmpty(formual)) {
+            Object object=SelectHelper.calculateTable(formual,startTable);
+            if(object instanceof JSONObject) return (JSONObject) object;
+            else if(object instanceof Stack) stack= (Stack<Table>) object;
         }
+
         if (resultColumns.equals("[*]")) {
             JSONObject jsonObject = new JSONObject();
             if (!stack.empty()) {

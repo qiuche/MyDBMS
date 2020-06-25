@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.schoolwork.desktopapp.Log.SysLog;
-import com.schoolwork.desktopapp.entity.tableSet;
+import com.schoolwork.desktopapp.bean.tableSet;
 import com.schoolwork.desktopapp.service.CreateService;
 import com.schoolwork.desktopapp.utils.Feedback;
 import org.apache.commons.lang.StringUtils;

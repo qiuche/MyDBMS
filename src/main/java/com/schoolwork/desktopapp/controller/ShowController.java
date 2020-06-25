@@ -34,6 +34,7 @@ public class ShowController {
         if (session.getAttribute("nowPath")==null) {
             return Feedback.info("尚未选择数据库", Feedback.STATUS_ERROR).toString();
         }
+        System.out.println(session.getAttribute("User"));
         JSONObject obj=new JSONObject();
         obj.put("AllTable",UseServiceImp.getTable(session.getAttribute("nowPath").toString()));
         return Feedback.jsonObject(obj,Feedback.STATUS_SUCCESS).toString();

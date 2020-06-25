@@ -2,13 +2,13 @@ package com.schoolwork.desktopapp.bean;
 
 import java.util.ArrayList;
 import java.util.List;
-
+//要该表的表（update和delete）
 public class ChangeTable {
-    private String tableName;
-    private List<Integer> rows=new ArrayList<>();
-    private int index;
-    private List<Integer> primaryKey=new ArrayList<>();
-    private List<UpdateItem> updateItems=new ArrayList<>();
+    private String tableName;  //表名
+    private List<Integer> rows=new ArrayList<>(); //要修改的行名
+    private int index;    //位于刚开始表的第几个位置
+    private List<Integer> primaryKey=new ArrayList<>();//主键
+    private List<UpdateItem> updateItems=new ArrayList<>();//这个表修改值
     public List<Integer> getPrimaryKey() {
         return primaryKey;
     }

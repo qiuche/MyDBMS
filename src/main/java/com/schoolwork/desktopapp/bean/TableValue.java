@@ -1,4 +1,4 @@
-package com.schoolwork.desktopapp.entity;
+package com.schoolwork.desktopapp.bean;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Index {
-    private int key;
-    private List<Integer>  valueList=new ArrayList<>();
+    private int key;  //key
+    private List<Integer>  valueList=new ArrayList<>();//保存各个表中每行的编号
 
     public int getKey() {
         return key;

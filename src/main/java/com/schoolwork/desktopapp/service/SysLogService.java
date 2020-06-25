@@ -1,6 +1,6 @@
 package com.schoolwork.desktopapp.service;
 
-import com.schoolwork.desktopapp.entity.SysLogBO;
+import com.schoolwork.desktopapp.bean.SysLogBO;
 
 import java.io.IOException;
 

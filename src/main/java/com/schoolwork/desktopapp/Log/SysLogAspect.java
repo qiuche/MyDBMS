@@ -3,7 +3,7 @@ package com.schoolwork.desktopapp.Log;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.schoolwork.desktopapp.entity.SQLConstant;
-import com.schoolwork.desktopapp.entity.SysLogBO;
+import com.schoolwork.desktopapp.bean.SysLogBO;
 import com.schoolwork.desktopapp.service.Imp.SysLogServiceImp;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -21,9 +21,6 @@ import java.util.List;
 
 /**
  * 系统日志切面
- * @author zhuzhe
- * @date 2018/6/4 9:27
- * @email 1529949535@qq.com
  */
 @Aspect  // 使用@Aspect注解声明一个切面
 @Component
@@ -105,6 +102,7 @@ public class SysLogAspect {
             int sum= SQLConstant.getSum();
             SQLConstant.setSum(sum+1);
         }
+        //访问方法为创建表并且创建成功，表标识id加一
         sysLogService.save(sysLogBO);
     }
 }

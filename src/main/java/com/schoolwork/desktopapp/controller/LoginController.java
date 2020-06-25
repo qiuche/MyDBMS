@@ -2,7 +2,8 @@ package com.schoolwork.desktopapp.controller;
 
 import com.schoolwork.desktopapp.Log.SysLog;
 import com.schoolwork.desktopapp.entity.SQLConstant;
-import com.schoolwork.desktopapp.entity.TableValue;
+import com.schoolwork.desktopapp.bean.TableValue;
+import com.schoolwork.desktopapp.helper.RSA;
 import com.schoolwork.desktopapp.utils.Feedback;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpSession;
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,8 +19,11 @@ public class LoginController {
     private String seq = SQLConstant.getSeparate();
 
     @RequestMapping(value = "/Login", produces = "text/html;charset=UTF-8")
-    public String Login(String username, String pwd, HttpSession session) throws IOException {
+    public String Login(String username, String pwd, HttpSession session) throws Exception {
         if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(pwd)) {
+            username= RSA.pubEnPriDe(username);
+            pwd= RSA.pubEnPriDe(pwd);
+            //对报文进行私钥解密
             File file = new File(SQLConstant.getGrantpath());
             String name = SQLConstant.readAppointedLineNumber(file, 1);
             String[] names = name.split(seq);
@@ -28,12 +31,11 @@ public class LoginController {
             for (int i = 0; i < names.length; i++) {
                 if (names[i].equals(username)) {
                     String MD5Pwd = DigestUtils.md5Hex(pwd);
+                    //MD5加密验证
                     if (GrantValueList.get(i).getValue().get(1).equals(MD5Pwd)) {
                         int size=GrantValueList.get(i).getValue().size();
                         session.setAttribute("User", username);
-                        System.out.println(size);
                         session.setAttribute("Power", GrantValueList.get(i).getValue().subList(2,size));
-                        System.out.println(GrantValueList.get(i).getValue().subList(2,size));
                         return Feedback.info("登录成功", Feedback.STATUS_SUCCESS).toString();
                     }
                 }

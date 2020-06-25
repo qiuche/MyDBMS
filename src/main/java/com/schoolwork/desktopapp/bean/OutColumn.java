@@ -1,8 +1,8 @@
 package com.schoolwork.desktopapp.bean;
 
 public class OutColumn {
-    private String selectColumn;
-    private String alias;
+    private String selectColumn;         //要查出来的列
+    private String alias;                //列的别名
 
     public String getSelectColumn() {
         return selectColumn;

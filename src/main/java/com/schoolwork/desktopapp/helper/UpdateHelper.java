@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class UpdateHelper {
+    //判断能不能修改
     public static boolean typeCheck(String value, String type,String constraint){
         if(isIntType(type)){
             if(value==null){
@@ -33,6 +34,7 @@ public class UpdateHelper {
         }
         return false;
     }
+    //获取要修改的表
     public static List<ChangeTable> getUpdateRow(List<UpdateItem> updateItemList, Table table){
         List<ChangeTable> changeTableList=new ArrayList<>();
         for(UpdateItem updateItem:updateItemList){
@@ -40,12 +42,6 @@ public class UpdateHelper {
             boolean flag=true;
             for(ChangeTable item:changeTableList){
                 if(updateItem.getTableName().equals(item.getTableName())){
-//                    if(isPrimaryKeyConstraint(updateItem.getConstraint())){
-//                        List<Integer> integerList=item.getPrimaryKey();
-//                        integerList.add(updateItem.getIndex());
-//                        item.setPrimaryKey(integerList);
-//                    }
-
                     List<UpdateItem> updateItems=item.getUpdateItems();
                     updateItems.add(updateItem);
                     item.setUpdateItems(updateItems);
@@ -64,17 +60,6 @@ public class UpdateHelper {
         }
         for(ChangeTable changeTable:changeTableList){
             int index=0;
-//            for(Column column:table.getColumnList()){
-//                if(changeTable.getTableName().equals(column.getTableColumn().split("\\.")[0])){
-//                    changeTable.setIndex(index);
-//                }
-//                if(isPrimaryKeyConstraint(column.getConstraint())){
-//                    List<Integer> integerList = changeTable.getPrimaryKey();
-//                integerList.add(index);
-//                changeTable.setPrimaryKey(integerList);
-//            }
-//            index++;
-//            }
             for(TableIndex tableIndex:table.getTableIndex()){
                 if(changeTable.getTableName().equals(tableIndex.getTableName())){
                     changeTable.setIndex(index);
@@ -95,6 +80,7 @@ public class UpdateHelper {
         }
         return changeTableList;
     }
+    //进行修改
     public static HashMap<String,String> updateTable(List<Table> tables, List<ChangeTable> changeTables) throws IOException {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String path =request.getSession().getAttribute("nowPath").toString();
@@ -126,22 +112,24 @@ public class UpdateHelper {
                         return result;
                     }
                 }
-
             }
             List<String> keyList=new ArrayList<>();
-
+            int row=-1;
             for(List<String> value:table.getValue()){
+                row++;
                 StringBuilder keyBulilder=new StringBuilder();
                 StringBuilder valueBuilder=new StringBuilder();
                 for(int keyIndex:changeTable.getPrimaryKey()){
-                    if(primaryKey.contains(keyIndex)){
-                        String string = null;
-                        for(UpdateItem updateItem:changeTable.getUpdateItems()){
-                            if(updateItem.getIndex()==keyIndex){
-                                string=updateItem.getValue();
+                    if(changeTable.getRows().contains(row)){
+                        if(primaryKey.contains(keyIndex)){
+                            String string = null;
+                            for(UpdateItem updateItem:changeTable.getUpdateItems()){
+                                if(updateItem.getIndex()==keyIndex){
+                                    string=updateItem.getValue();
+                                }
                             }
+                            keyBulilder.append(string+seq);
                         }
-                        keyBulilder.append(string+seq);
                     }
                     else {
                         keyBulilder.append(value.get(keyIndex)+seq);
@@ -156,15 +144,19 @@ public class UpdateHelper {
                 for(int index=0;index<value.size();index++){
                     boolean flag=true;
                     String string = null;
-                    for(UpdateItem updateItem:changeTable.getUpdateItems()){
-                        if(updateItem.getIndex()==index){
-                            string=updateItem.getValue();
-                            flag=false;
-                            break;
+                    if(changeTable.getRows().contains(row)){
+                        for(UpdateItem updateItem:changeTable.getUpdateItems()){
+                            if(updateItem.getIndex()==index){
+                                string=updateItem.getValue();
+                                flag=false;
+                                break;
+                            }
                         }
+                        if(flag) string=value.get(index);
+                        valueBuilder.append(string+seq);
                     }
-                    if(flag) string=value.get(index);
-                    valueBuilder.append(string+seq);
+                    else valueBuilder.append(value.get(index)+seq);
+
                 }
                 valueList.add(valueBuilder.toString());
             }
@@ -182,9 +174,10 @@ public class UpdateHelper {
             bufferedWriter.close();
             fileWriter.close();
         }
-        result.put("SUCCESS","影响了"+changeRowNum+"行");
+        result.put("Success","影响了"+changeRowNum+"行");
         return result;
     }
+    //获取表内前四行的数据
     public static List<String> getFourRow(File file) throws IOException {
         List<String> valueList=new ArrayList<>();
         FileReader fileReader = new FileReader(file);
@@ -196,17 +189,23 @@ public class UpdateHelper {
         return valueList;
     }
 
+    //是不是varchar类型
     public static boolean isVarcharType(String word){
         return word.matches("^varchar\\d+$");
     }
-    public static boolean isIntType(String word){return  word.matches("^int$");}
+    //是不是int类型
+    public static boolean isIntType(String word){return  word.matches("^int\\d+$");}
+    //是不是double
     public static boolean isDoubleType(String word){return  word.matches("^double$");}
+    //是不是数字
     public static boolean isDigit(String word) { return word.matches("^([-+])?\\d+(\\.\\d+)?$"); }
+    //是不是int形数据
     public static boolean isIntValue(String word){return word.matches("^([-+])?\\d+$");}
-
+    //允不允许数据为空
     public static boolean isNullConstraint(String word){
         return !word.contains("primary key") && !word.contains("not null");
     }
+    //是不是主键
     public static boolean isPrimaryKeyConstraint(String word){
         return word.contains("primary key");
     }

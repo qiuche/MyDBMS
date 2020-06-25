@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DeleteHelper {
+    //获取修改的表
     public static  List<ChangeTable> getNeedDelete(List<String> deleteTables, Table table){
         System.out.println("ddd"+table);
         List<ChangeTable> changeTableList =new ArrayList<>();
@@ -23,16 +24,27 @@ public class DeleteHelper {
             ChangeTable changeTable =new ChangeTable();
             for(TableIndex tableIndex:table.getTableIndex()){
                 List<Integer> rows=new ArrayList<>();
-                if(tableIndex.getAlias().equals(deleteTableName)||tableIndex.getTableName().equals(deleteTableName)){
-                    System.out.println("dddddddd");
-                    for(Index index:table.getIndex()){
-                        int rowIndex=index.getValueList().get(i);
-                        if(!rows.contains(rowIndex))
-                            rows.add(rowIndex);
-
+                if(tableIndex.getAlias()==null){
+                    if(tableIndex.getTableName().equals(deleteTableName)){
+                        for(Index index:table.getIndex()){
+                            int rowIndex=index.getValueList().get(i);
+                            if(!rows.contains(rowIndex))
+                                rows.add(rowIndex);
+                        }
+                        changeTable =new ChangeTable(tableIndex.getTableName(),rows);
+                        break;
                     }
-                    changeTable =new ChangeTable(tableIndex.getTableName(),rows);
-                    break;
+                }
+                else {
+                    if(tableIndex.getAlias().equals(deleteTableName)||tableIndex.getTableName().equals(deleteTableName)){
+                        for(Index index:table.getIndex()){
+                            int rowIndex=index.getValueList().get(i);
+                            if(!rows.contains(rowIndex))
+                                rows.add(rowIndex);
+                        }
+                        changeTable =new ChangeTable(tableIndex.getTableName(),rows);
+                        break;
+                    }
                 }
                 i++;
             }
@@ -43,6 +55,7 @@ public class DeleteHelper {
         }
         return changeTableList;
     }
+    //进行删除
     public static HashMap<String,String> deleteValue(List<ChangeTable> changeTableList) throws IOException {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String path =request.getSession().getAttribute("nowPath").toString();

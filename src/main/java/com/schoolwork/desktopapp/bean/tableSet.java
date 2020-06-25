@@ -1,4 +1,4 @@
-package com.schoolwork.desktopapp.entity;
+package com.schoolwork.desktopapp.bean;
 
 public class tableSet {
     public int limitNum;

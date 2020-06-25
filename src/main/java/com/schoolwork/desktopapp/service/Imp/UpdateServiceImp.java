@@ -33,11 +33,11 @@ public class UpdateServiceImp implements UpdateService {
         String sep = SQLConstant.getSeparate();
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
         String path = request.getSession().getAttribute("nowPath").toString();
-        List grantlist = (List) request.getSession().getAttribute("Power");
+        List<String> grantlist = (List) request.getSession().getAttribute("Power");
         List<OutColumn> outColumnList = new ArrayList<>();
         for (Table item : tables) {
 //                File file = new File(path+item.getTablename()+".txt");
-            File file = new File(path +"\\"+ item.getTablename() + ".txt");
+            File file = new File(path + "\\" + item.getTablename() + ".txt");
             if (!file.exists()) {
                 builder.append(item.getTablename() + ",");
                 tableExist = false;
@@ -54,7 +54,6 @@ public class UpdateServiceImp implements UpdateService {
                 //读取属性
                 String strings = bufferedReader.readLine();
                 String[] columns = strings.split(sep);
-//                List<TableValue> tableValueList=new ArrayList<>();
                 List<Column> columnList = new ArrayList<>();
                 for (String column : columns) {
                     Column column1 = new Column(column, item.getTablename() + "." + column);
@@ -84,7 +83,7 @@ public class UpdateServiceImp implements UpdateService {
                 List<List<String>> valueList = new ArrayList<>();
                 List<Index> indexList = new ArrayList<>();
                 while ((s = bufferedReader.readLine()) != null) {
-                    if(s.equals("")) break;
+                    if (s.equals("")) break;
                     List<String> rows = new ArrayList<>(Arrays.asList(s.split(sep)));
                     for (int num = rows.size(); num < item.getColumnList().size(); num++) {
                         rows.add("");
@@ -152,61 +151,16 @@ public class UpdateServiceImp implements UpdateService {
 
 
         Table startTable;
-        if(tables.size()==1){
-            startTable=tables.get(0);
-        }
-        else {
-            startTable= SelectHelper.getCartesian(tables);
+        if (tables.size() == 1) {
+            startTable = tables.get(0);
+        } else {
+            startTable = SelectHelper.getCartesian(tables);
         }
         Stack<Table> stack = new Stack<>();
-        if (StringUtil.isNotEmpty(formual)) {
-            Formual formuals = JSONObject.parseObject(formual, Formual.class);
-            //查询到uid
-            for (String uid : formuals.getPointStr()) {
-                if (SelectHelper.isOperation(uid)) {
-                    Table leftTable = stack.pop();
-                    Table rightTable = stack.pop();
-                    Table midTable = SelectHelper.getTableCount(leftTable, rightTable, uid);
-                    stack.push(midTable);
-                } else {
-                    Table countTable = new Table();
-                    for (OpValue opValue : formuals.getArrRes()) {
-                        if (opValue.getUid().equals(uid)) {
-                            if (SelectHelper.isKey(opValue.getKey())) {
-                                if (SelectHelper.isKey(opValue.getKey())) {
-                                    int leftIndex = SelectHelper.getColumnIndex(opValue.getKey(), startTable);
-                                    if (SelectHelper.isKey(opValue.getValue())) {
-                                        int rightIndex = SelectHelper.getColumnIndex(opValue.getValue(), startTable);
-                                        countTable = SelectHelper.getTableResult(leftIndex, rightIndex, startTable, opValue.getOperator());
-                                        stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                    } else {
-                                        String rightValue = SelectHelper.getSubString(opValue.getValue());
-                                        countTable = SelectHelper.getTableResult(leftIndex, rightValue, startTable, opValue.getOperator());
-                                        stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                    }
-                                }
-                            } else {
-                                String rightValue = SelectHelper.getSubString(opValue.getValue());
-                                if (SelectHelper.isKey(opValue.getValue())) {
-                                    int leftIndex = SelectHelper.getColumnIndex(opValue.getValue(), startTable);
-                                    countTable = SelectHelper.getTableResult(leftIndex, rightValue, startTable, opValue.getOperator());
-                                    stack.push(countTable);
-//                                        JSONObject jsonObject = new JSONObject();
-//                                        jsonObject.put("tables", countTable);
-//                                        return Feedback.jsonObject(jsonObject, "200");
-                                } else {
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+        if(!StringUtil.isEmpty(formual)) {
+            Object object=SelectHelper.calculateTable(formual,startTable);
+            if(object instanceof JSONObject) return (JSONObject) object;
+            else if(object instanceof Stack) stack= (Stack<Table>) object;
         }
 
         Table resultTable = startTable;
@@ -215,8 +169,11 @@ public class UpdateServiceImp implements UpdateService {
         }
         List<ChangeTable> changeTableList = UpdateHelper.getUpdateRow(updateItemList, resultTable);
 
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("tables", UpdateHelper.updateTable(tables, changeTableList));
-        return Feedback.jsonObject(jsonObject, "200");
+        HashMap<String, String> hashMap = UpdateHelper.updateTable(tables, changeTableList);
+        if (hashMap.containsKey("Error")) {
+            return Feedback.info(hashMap.get("Error"), "501");
+        }
+        return Feedback.info(hashMap.get("Success"), "200");
+
     }
 }

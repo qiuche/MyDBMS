@@ -2,7 +2,7 @@ package com.schoolwork.desktopapp.service.Imp;
 
 import com.alibaba.fastjson.JSONObject;
 import com.schoolwork.desktopapp.entity.SQLConstant;
-import com.schoolwork.desktopapp.entity.TableValue;
+import com.schoolwork.desktopapp.bean.TableValue;
 import com.schoolwork.desktopapp.service.InsertService;
 import com.schoolwork.desktopapp.utils.Feedback;
 import org.apache.commons.lang.StringUtils;
@@ -24,6 +24,7 @@ public class InsertServiceImp implements InsertService {
     private static String seq = SQLConstant.getSeparate();
     private static String newline = "\r\n";
 
+    //对没有字段名的insert语句，进行按列顺序插入字段名
     private static Map<String, List> veer(Map valuesmap, String[] names) {
         Map<String, List> tidai = new HashMap<>();
         int ind = 0;
@@ -41,6 +42,7 @@ public class InsertServiceImp implements InsertService {
         return tidai;
     }
 
+    //对无输入的列进行null替代
     private static Map<String, List> completion(Map<String, List> valuesmap, String[] names, int valuelistsize) {
         List nulllist = new ArrayList();
         for (int i = 0; i < valuelistsize; i++) {
@@ -54,6 +56,7 @@ public class InsertServiceImp implements InsertService {
         return valuesmap;
     }
 
+    //进行字符类型（int，String）校准以及长度校准
     private static boolean decideStyle(Map<String, List> valuesmap, String[] names, String[] limitStyles) {
         List namelist = Arrays.asList(names);
         List limitStylelist = Arrays.asList(limitStyles);
@@ -91,6 +94,7 @@ public class InsertServiceImp implements InsertService {
         return flag;
     }
 
+    //进行主键校准
     private static boolean decidePrimaryKey(Map<String, List> valuesmap, String[] names, String[] limits, List<TableValue> TableValuelist) {
         System.out.println(valuesmap);
         System.out.println(names);
@@ -122,6 +126,7 @@ public class InsertServiceImp implements InsertService {
         return flag;
     }
 
+    //写文件
     private boolean writein(Map<String, List> valuesmap, String[] names, File file, int valuelistsize) throws Exception {
         RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         FileChannel fileChannel = randomAccessFile.getChannel();
@@ -160,14 +165,17 @@ public class InsertServiceImp implements InsertService {
     @Override
     public JSONObject InsertTableValue(String tablename, Map<String, List> valuesmap, HttpSession session) throws IOException {
         String nowPath = session.getAttribute("nowPath").toString();
-        List grantlist = (List) session.getAttribute("Power");
+        List<String> grantlist = (List) session.getAttribute("Power");
         if (tablename.trim().length() == 0 || StringUtils.isEmpty(tablename)) {
             return Feedback.info("表名为空", Feedback.STATUS_ERROR);
         } else {
             File file = new File(nowPath + "\\" + tablename + ".txt");
             if (file.exists()) {
                 String id = SQLConstant.readAppointedLineNumber(file, 1);
-                if (!(grantlist.contains(id))) {
+                System.out.println(id);
+                System.out.println(grantlist.contains(id));
+                if (!grantlist.contains(id)) {
+                    System.out.println(grantlist);
                     return Feedback.info("无权利操作该表", Feedback.STATUS_ERROR);
                 }
                 String name = SQLConstant.readAppointedLineNumber(file, 2);
