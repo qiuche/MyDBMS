@@ -35,6 +35,7 @@ public class UpdateServiceImp implements UpdateService {
         String path = request.getSession().getAttribute("nowPath").toString();
         List<String> grantlist = (List) request.getSession().getAttribute("Power");
         List<OutColumn> outColumnList = new ArrayList<>();
+        //判断表是否存在
         for (Table item : tables) {
             File file = new File(path + "\\" + item.getTablename() + ".txt");
             if (!file.exists()) {
@@ -44,6 +45,7 @@ public class UpdateServiceImp implements UpdateService {
         }
         if (!tableExist)
             return Feedback.info(builder + "表不存在", "500");
+        //读属性及其类型与约束
         for(Table item:tables){
             File file = new File(path + "\\" + item.getTablename() + ".txt");
             String id = SQLConstant.readAppointedLineNumber(file, 1);
@@ -79,39 +81,23 @@ public class UpdateServiceImp implements UpdateService {
                 column.setConstraint(constraint.get(i));
                 i++;
             }
-            //读取列数据
-
-            String s = "";
-            i = 0;
-            List<List<String>> valueList = new ArrayList<>();
-            List<Index> indexList = new ArrayList<>();
-            while ((s = bufferedReader.readLine()) != null) {
-                if (s.equals("")) break;
-                List<String> rows = new ArrayList<>(Arrays.asList(s.split(sep)));
-                for (int num = rows.size(); num < item.getColumnList().size(); num++) {
-                    rows.add("");
-                }
-                Index index = new Index(i, i);
-                indexList.add(index);
-                //保存索引
-                i++;
-                valueList.add(rows);
-            }
-            item.setIndex(indexList);
             TableIndex tableIndex = new TableIndex(item.getTablename(), item.getAlias(), 0, item.getColumnList().size());
             tableIndex.setPrimarykey(primaryKey);
             List<TableIndex> tableIndexList = new ArrayList<>();
             tableIndexList.add(tableIndex);
             item.setTableIndex(tableIndexList);
-            item.setValue(valueList);
             bufferedReader.close();
         }
-        //修改的属性进行判断是不是合法的
+        //判断where子句中属性是否存在或者冲突
+        if(!StringUtil.isEmpty(formual)){
+            Object object=SelectHelper.whereCheck(formual,tables);
+            if(object instanceof JSONObject) return (JSONObject) object;
+        }
+        //修改的属性进行判断是不是合法的，顺便保存信息
         List<UpdateItem> updateItemList = JSON.parseArray(updateItem, UpdateItem.class);
         HashMap<String, Integer> columnIndex = new HashMap<>();
         for (UpdateItem item : updateItemList) {
             String key = item.getKey();
-            System.out.println(key);
             int index = 0;
             for (Table table1 : tables) {
                 int i = 0;
@@ -133,8 +119,6 @@ public class UpdateServiceImp implements UpdateService {
             }
             columnIndex.put(key, index);
         }
-
-        System.out.println(columnIndex.get("id"));
         StringBuilder errorColumn = new StringBuilder();
         for (String column : columnIndex.keySet()) {
             if (columnIndex.get(column) > 1)
@@ -145,7 +129,35 @@ public class UpdateServiceImp implements UpdateService {
         if (errorColumn.length() > 0) {
             return Feedback.info(errorColumn.toString(), "500");
         }
-
+        //读取表数据
+        for(Table item:tables){
+            File file = new File(path +"\\"+ item.getTablename() + ".txt");
+            String id = SQLConstant.readAppointedLineNumber(file, 1);
+            FileReader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            bufferedReader.readLine();
+            bufferedReader.readLine();
+            String[] type = bufferedReader.readLine().split(sep);
+            String[] constraint = bufferedReader.readLine().split(sep);
+            String s = "";
+            int i = 0;
+            List<List<String>> valueList = new ArrayList<>();
+            List<Index> indexList = new ArrayList<>();
+            while ((s = bufferedReader.readLine()) != null) {
+                if (s.equals("")) break;
+                List<String> rows = new ArrayList<>(Arrays.asList(s.split(sep)));
+                for (int num = rows.size(); num < item.getColumnList().size(); num++) {
+                    rows.add("");
+                }
+                Index index = new Index(i, i);
+                indexList.add(index);
+                //保存索引
+                i++;
+                valueList.add(rows);
+            }
+            item.setIndex(indexList);
+            item.setValue(valueList);
+        }
 
         Table startTable;
         if (tables.size() == 1) {
@@ -154,6 +166,7 @@ public class UpdateServiceImp implements UpdateService {
             startTable = SelectHelper.getCartesian(tables);
         }
         Stack<Table> stack = new Stack<>();
+        //where子句是否为空
         if(!StringUtil.isEmpty(formual)) {
             Object object=SelectHelper.calculateTable(formual,startTable);
             if(object instanceof JSONObject) return (JSONObject) object;

@@ -457,6 +457,70 @@ public class SelectHelper {
         outPutTable.setValues(resultValue);
         return outPutTable;
     }
+    //判断where子句是否有错误
+    public static Object whereCheck(String formual,List<Table> tables){
+        Formual formuals = JSONObject.parseObject(formual, Formual.class);
+        StringBuilder stringBuilder=new StringBuilder();
+        boolean error=false;
+            for (OpValue opValue : formuals.getArrRes()) {
+                int keynum = 0;
+                int valuenum=0;
+                int keyflag=0;
+                int valueflag=0;
+                if (isKey(opValue.getKey())) {
+                    keyflag=1;
+                    String key = opValue.getKey();
+                    for (Table table : tables) {
+                        for (Column column : table.getColumnList()) {
+                            if (column.getAliasColumn() == null) {
+                                if (column.getColumn().equals(key) || column.getTableColumn().equals(key)) {
+                                    keynum++;
+                                }
+                            }
+                            else {
+                                if (column.getColumn().equals(key) || column.getTableColumn().equals(key) || column.getAliasColumn().equals(key)) {
+                                    keynum++;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (isKey(opValue.getValue())) {
+                    valueflag=1;
+                    String key = opValue.getKey();
+                    for (Table table : tables) {
+                        for (Column column : table.getColumnList()) {
+                            if (column.getColumn().equals(key) || column.getTableColumn().equals(key)) {
+                                valuenum++;
+                            }
+                        }
+                    }
+                }
+                if(keyflag==1){
+                    if(keynum>1){
+                        error=true;
+                        stringBuilder.append(opValue.getKey()+"不能确定  ");
+                    }
+                    else if(keynum==0){
+                        error=true;
+                        stringBuilder.append(opValue.getKey()+"不存在  ");
+                    }
+                }
+                if(valueflag==1){
+                    if(valuenum>1){
+                        error=true;
+                        stringBuilder.append(opValue.getValue()+"不能确定  ");
+                    }
+                    else if(valuenum==0){
+                        error=true;
+                        stringBuilder.append(opValue.getValue()+"不存在  ");
+                    }
+                }
+            }
+            if(error)
+                return Feedback.info(stringBuilder.toString(),"501");
+            return 1;
+    }
     //逆波兰式运算
     public static Object calculateTable(String formual, Table startTable) {
         Stack<Table> stack = new Stack<>();

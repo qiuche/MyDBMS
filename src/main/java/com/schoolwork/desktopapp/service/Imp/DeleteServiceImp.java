@@ -7,6 +7,7 @@ import com.schoolwork.desktopapp.bean.*;
 import com.schoolwork.desktopapp.entity.SQLConstant;
 import com.schoolwork.desktopapp.helper.DeleteHelper;
 import com.schoolwork.desktopapp.helper.SelectHelper;
+import com.schoolwork.desktopapp.helper.UpdateHelper;
 import com.schoolwork.desktopapp.service.DeleteService;
 import com.schoolwork.desktopapp.utils.Feedback;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class DeleteServiceImp implements DeleteService {
         }
         if (!tableExist)
             return Feedback.info(builder + "表不存在", "500");
+        //读取表数据
         for(Table item:tables){
             File file = new File(path + "\\" + item.getTablename() + ".txt");
             String id = SQLConstant.readAppointedLineNumber(file, 1);
@@ -58,7 +60,6 @@ public class DeleteServiceImp implements DeleteService {
             //读取属性
             String strings = bufferedReader.readLine();
             String[] columns = strings.split(sep);
-//                List<TableValue> tableValueList=new ArrayList<>();
             List<Column> columnList = new ArrayList<>();
             for (String column : columns) {
                 Column column1 = new Column(column, item.getTablename() + "." + column);
@@ -69,18 +70,42 @@ public class DeleteServiceImp implements DeleteService {
             }
             item.setColumnList(columnList);
 
-            List<String> type = Arrays.asList(bufferedReader.readLine().split(sep));
             List<String> constraint = Arrays.asList(bufferedReader.readLine().split(sep));
+            List<String> type = Arrays.asList(bufferedReader.readLine().split(sep));
             int i = 0;
+            List<Integer> primaryKey = new ArrayList<>();
             for (Column column : item.getColumnList()) {
                 column.setType(type.get(i));
+                if (UpdateHelper.isPrimaryKeyConstraint(constraint.get(i))) {
+                    primaryKey.add(i);
+                }
                 column.setConstraint(constraint.get(i));
                 i++;
             }
-            //读取列数据
-
+            TableIndex tableIndex = new TableIndex(item.getTablename(), item.getAlias(), 0, item.getColumnList().size());
+            tableIndex.setPrimarykey(primaryKey);
+            List<TableIndex> tableIndexList = new ArrayList<>();
+            tableIndexList.add(tableIndex);
+            item.setTableIndex(tableIndexList);
+            bufferedReader.close();
+        }
+        //判断where子句中属性是否存在或者冲突
+        if(!StringUtil.isEmpty(formual)){
+            Object object=SelectHelper.whereCheck(formual,tables);
+            if(object instanceof JSONObject) return (JSONObject) object;
+        }
+        //读取表数据
+        for(Table item:tables){
+            File file = new File(path +"\\"+ item.getTablename() + ".txt");
+            String id = SQLConstant.readAppointedLineNumber(file, 1);
+            FileReader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            bufferedReader.readLine();
+            bufferedReader.readLine();
+            String[] type = bufferedReader.readLine().split(sep);
+            String[] constraint = bufferedReader.readLine().split(sep);
             String s = "";
-            i = 0;
+            int i = 0;
             List<List<String>> valueList = new ArrayList<>();
             List<Index> indexList = new ArrayList<>();
             while ((s = bufferedReader.readLine()) != null) {
@@ -96,16 +121,8 @@ public class DeleteServiceImp implements DeleteService {
                 valueList.add(rows);
             }
             item.setIndex(indexList);
-            TableIndex tableIndex = new TableIndex(item.getTablename(), item.getAlias(), 0, item.getColumnList().size());
-            List<TableIndex> tableIndexList = new ArrayList<>();
-            tableIndexList.add(tableIndex);
-            item.setTableIndex(tableIndexList);
             item.setValue(valueList);
-            bufferedReader.close();
-            System.out.println(item);
         }
-
-
 
         Table startTable;
         if (tables.size() == 1) {

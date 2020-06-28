@@ -109,6 +109,11 @@ public class SelectServiceImp implements SelectService {
                 return Feedback.info(errorColumn.toString(), "500");
             }
         }
+        //判断where子句中的属性是否存在或者冲突
+        if(!StringUtil.isEmpty(formual)){
+            Object object=SelectHelper.whereCheck(formual,tables);
+            if(object instanceof JSONObject) return (JSONObject) object;
+        }
         //读取表的数据
         for(Table item:tables){
             File file = new File(path +"\\"+ item.getTablename() + ".txt");
@@ -149,9 +154,13 @@ public class SelectServiceImp implements SelectService {
             startTable=tables.get(0);
         }
         else {
+            //进行笛卡尔积
             startTable= SelectHelper.getCartesian(tables);
         }
         Stack<Table> stack = new Stack<>();
+
+
+        //where子句解析
         if(!StringUtil.isEmpty(formual)) {
             Object object=SelectHelper.calculateTable(formual,startTable);
             if(object instanceof JSONObject) return (JSONObject) object;
