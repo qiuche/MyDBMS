@@ -45,57 +45,33 @@ public class SelectServiceImp implements SelectService {
                 builder.append(item.getTablename() + ",");
                 tableExist = false;
             }
-            if (tableExist) {
-                String id = SQLConstant.readAppointedLineNumber(file, 1);
-                System.out.println(id);
-                if (!(grantlist.contains(id))) {
-                    return Feedback.info("无权利操作该表", Feedback.STATUS_ERROR);
-                }
-                FileReader reader = new FileReader(file);
-                BufferedReader bufferedReader = new BufferedReader(reader);
-                bufferedReader.readLine();
-
-                //读取属性
-                String strings = bufferedReader.readLine();
-                String[] columns = strings.split(sep);
-                List<Column> columnList = new ArrayList<>();
-                for (String column : columns) {
-                    Column column1 = new Column(column, item.getTablename() + "." + column);
-                    if (item.getAlias() != null) {
-                        column1.setAliasColumn(item.getAlias() + "." + column);
-                    }
-                    columnList.add(column1);
-                }
-                item.setColumnList(columnList);
-
-                String[] type = bufferedReader.readLine().split(sep);
-                String[] constraint = bufferedReader.readLine().split(sep);
-                //读取列数据
-                String s = "";
-                int i = 0;
-                List<List<String>> valueList = new ArrayList<>();
-                List<Index> indexList = new ArrayList<>();
-                while ((s = bufferedReader.readLine()) != null) {
-                    if(s.equals("")) break;
-                    List<String> rows = new ArrayList<>(Arrays.asList(s.split(sep)));
-                    for (int num = rows.size(); num < item.getColumnList().size(); num++) {
-                        rows.add("");
-                    }
-                    Index index = new Index(i, i);
-                    indexList.add(index);
-                    //保存索引
-                    i++;
-                    valueList.add(rows);
-                }
-                item.setIndex(indexList);
-                TableIndex tableIndex = new TableIndex(item.getTablename(), item.getAlias(), 0, item.getColumnList().size());
-                List<TableIndex> tableIndexList = new ArrayList<>();
-                tableIndexList.add(tableIndex);
-                item.setTableIndex(tableIndexList);
-                item.setValue(valueList);
-                bufferedReader.close();
-            }
         }
+        if (!tableExist)
+            return Feedback.info(builder + "表不存在", "500");
+        for(Table item:tables){
+            File file = new File(path +"\\"+ item.getTablename() + ".txt");
+            String id = SQLConstant.readAppointedLineNumber(file, 1);
+            if (!(grantlist.contains(id))) {
+                return Feedback.info("无权利操作该表", Feedback.STATUS_ERROR);
+            }
+            FileReader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            bufferedReader.readLine();
+            //读取属性
+            String strings = bufferedReader.readLine();
+            String[] columns = strings.split(sep);
+            List<Column> columnList = new ArrayList<>();
+            for (String column : columns) {
+                Column column1 = new Column(column, item.getTablename() + "." + column);
+                if (item.getAlias() != null) {
+                    column1.setAliasColumn(item.getAlias() + "." + column);
+                }
+                columnList.add(column1);
+            }
+            item.setColumnList(columnList);
+            bufferedReader.close();
+        }
+        //如果查询的不是*要先确认查询的属性是否符合
         if (!resultColumns.equals("[*]")) {
             outColumnList = JSON.parseArray(resultColumns, OutColumn.class);
             HashMap<String, Integer> columnIndex = new HashMap<>();
@@ -133,8 +109,40 @@ public class SelectServiceImp implements SelectService {
                 return Feedback.info(errorColumn.toString(), "500");
             }
         }
-        if (!tableExist)
-            return Feedback.info(builder + "表不存在", "500");
+        //读取表的数据
+        for(Table item:tables){
+            File file = new File(path +"\\"+ item.getTablename() + ".txt");
+            String id = SQLConstant.readAppointedLineNumber(file, 1);
+            FileReader reader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+            bufferedReader.readLine();
+            bufferedReader.readLine();
+            String[] type = bufferedReader.readLine().split(sep);
+            String[] constraint = bufferedReader.readLine().split(sep);
+            //读取列数据
+            String s = "";
+            int i = 0;
+            List<List<String>> valueList = new ArrayList<>();
+            List<Index> indexList = new ArrayList<>();
+            while ((s = bufferedReader.readLine()) != null) {
+                if(s.equals("")) break;
+                List<String> rows = new ArrayList<>(Arrays.asList(s.split(sep)));
+                for (int num = rows.size(); num < item.getColumnList().size(); num++) {
+                    rows.add("");
+                }
+                Index index = new Index(i, i);
+                indexList.add(index);
+                //保存索引
+                i++;
+                valueList.add(rows);
+            }
+            item.setIndex(indexList);
+            TableIndex tableIndex = new TableIndex(item.getTablename(), item.getAlias(), 0, item.getColumnList().size());
+            List<TableIndex> tableIndexList = new ArrayList<>();
+            tableIndexList.add(tableIndex);
+            item.setTableIndex(tableIndexList);
+            item.setValue(valueList);
+        }
 
         Table startTable;
         if(tables.size()==1){
